@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Sphere Simulation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: black;
+    }
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    let points = [];
+    const radius = 150;
+    const density = 18; // Density of points
+    const charset = ".:;+=xX$&@#"; // ASCII characters from light to dark
+    let rotationX = 0;
+    let rotationY = 0;
+    let rotationZ = 0;
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      textAlign(CENTER, CENTER);
+      textFont('monospace');
+      
+      // Generate points on a sphere using spherical coordinates
+      for (let i = 0; i < density; i++) {
+        for (let j = 0; j < density; j++) {
+          const phi = map(i, 0, density - 1, 0, PI);
+          const theta = map(j, 0, density - 1, 0, TWO_PI);
+          
+          const x = radius * sin(phi) * cos(theta);
+          const y = radius * sin(phi) * sin(theta);
+          const z = radius * cos(phi);
+          
+          // Store each point with a random character from our charset
+          points.push({
+            x: x,
+            y: y,
+            z: z,
+            char: charset.charAt(floor(random(charset.length)))
+          });
+        }
+      }
+    }
+
+    function draw() {
+      background(0);
+      
+      // Increase rotation values
+      rotationX += 0.005;
+      rotationY += 0.007;
+      rotationZ += 0.003;
+      
+      // Move to center of canvas
+      translate(width / 2, height / 2);
+      
+      // Draw each point
+      for (let point of points) {
+        // Apply rotation transformations
+        let x = point.x;
+        let y = point.y;
+        let z = point.z;
+        
+        // Rotate around X axis
+        let tempY = y * cos(rotationX) - z * sin(rotationX);
+        let tempZ = y * sin(rotationX) + z * cos(rotationX);
+        y = tempY;
+        z = tempZ;
+        
+        // Rotate around Y axis
+        let tempX = x * cos(rotationY) + z * sin(rotationY);
+        tempZ = -x * sin(rotationY) + z * cos(rotationY);
+        x = tempX;
+        z = tempZ;
+        
+        // Rotate around Z axis
+        tempX = x * cos(rotationZ) - y * sin(rotationZ);
+        tempY = x * sin(rotationZ) + y * cos(rotationZ);
+        x = tempX;
+        y = tempY;
+        
+        // Calculate display size and color based on z-position
+        // Map z value to determine brightness
+        const normalizedZ = map(z, -radius, radius, 0, 1);
+        const size = map(z, -radius, radius, 12, 24); // Size varies with depth
+        
+        // Calculate brightness (0-255) - higher z values (closer) are brighter
+        const brightness = map(normalizedZ, 0, 1, 80, 255);
+        
+        // Set text properties
+        fill(brightness);
+        textSize(size);
+        
+        // Only draw points that would be visible (facing the viewer)
+        if (z < radius * 0.8) {
+          text(point.char, x, y);
+        }
+      }
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+  </script>
+</body>
+</html>
